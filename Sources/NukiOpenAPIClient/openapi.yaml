@@ -1,0 +1,40 @@
+openapi: 3.0.0
+info:
+  title: Nuki Web API
+  version: 1.4.0
+  description: Placeholder OpenAPI specification for Nuki Web API - Replace with actual spec from https://developer.nuki.io
+servers:
+  - url: https://api.nuki.io
+    description: Production server
+paths:
+  /smartlock:
+    get:
+      summary: List smart locks
+      operationId: listSmartlocks
+      responses:
+        '200':
+          description: List of smart locks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Smartlock'
+components:
+  schemas:
+    Smartlock:
+      type: object
+      properties:
+        smartlockId:
+          type: integer
+        name:
+          type: string
+      required:
+        - smartlockId
+        - name
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+security:
+  - bearerAuth: []
