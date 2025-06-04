@@ -2,5 +2,3 @@ generate:
   - types
   - client
 accessModifier: public
-featureFlags:
-  - proposal-0001
