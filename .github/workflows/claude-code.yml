@@ -15,7 +15,7 @@ jobs:
   claude-code-review:
     runs-on: ubuntu-latest
     steps:
-      - uses: anthropics/claude-code-github-action@main
+      - uses: anthropics/claude-code-action@main
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
