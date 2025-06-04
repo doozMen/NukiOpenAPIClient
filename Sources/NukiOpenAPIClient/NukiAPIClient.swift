@@ -35,27 +35,67 @@ public class NukiAPIClient {
         return client
     }
     
-    // MARK: - Example convenience methods
-    // These would need to be updated based on the actual generated API
-    // For now, we expose the raw client so users can make any API call
+    // MARK: - Convenience Methods
     
-    /// Example of how to list smartlocks
-    /// Usage: 
-    /// let response = try await client.rawClient.SmartlocksResource_get_get(.init())
-    /// switch response {
-    /// case .ok(let okResponse):
-    ///     // Handle success
-    /// case .unauthorized:
-    ///     // Handle auth error
-    /// default:
-    ///     // Handle other cases
-    /// }
+    /// List all smartlocks associated with the account
+    /// - Returns: Array of smartlocks
+    /// - Throws: NukiAPIError if the request fails
+    public func listSmartlocks() async throws -> [Components.Schemas.Smartlock] {
+        let response = try await client.SmartlocksResource_get_get(.init())
+        
+        switch response {
+        case .ok(let okResponse):
+            guard case .any(let httpBody) = okResponse.body else {
+                throw NukiAPIError.unexpectedResponse(statusCode: 200)
+            }
+            let smartlocks = try await JSONDecoder().decode(
+                [Components.Schemas.Smartlock].self,
+                from: Data(collecting: httpBody, upTo: .max)
+            )
+            return smartlocks
+        case .unauthorized:
+            throw NukiAPIError.authenticationRequired
+        case .undocumented(statusCode: let statusCode, _):
+            throw NukiAPIError.unexpectedResponse(statusCode: statusCode)
+        }
+    }
+    
+    /// Get a specific smartlock by ID
+    /// - Parameter smartlockId: The ID of the smartlock
+    /// - Returns: The smartlock details
+    /// - Throws: NukiAPIError if the request fails
+    public func getSmartlock(id smartlockId: Int) async throws -> Components.Schemas.Smartlock {
+        let response = try await client.SmartlockResource_get_get(
+            path: .init(smartlockId: smartlockId)
+        )
+        
+        switch response {
+        case .ok(let okResponse):
+            guard case .any(let httpBody) = okResponse.body else {
+                throw NukiAPIError.unexpectedResponse(statusCode: 200)
+            }
+            let smartlock = try await JSONDecoder().decode(
+                Components.Schemas.Smartlock.self,
+                from: Data(collecting: httpBody, upTo: .max)
+            )
+            return smartlock
+        case .unauthorized:
+            throw NukiAPIError.authenticationRequired
+        case .forbidden:
+            throw NukiAPIError.forbidden
+        case .notFound:
+            throw NukiAPIError.notFound
+        case .undocumented(statusCode: let statusCode, _):
+            throw NukiAPIError.unexpectedResponse(statusCode: statusCode)
+        }
+    }
 }
 
 public enum NukiAPIError: Error {
     case unexpectedResponse(statusCode: Int)
     case authenticationRequired
     case notFound
+    case forbidden
     case badRequest
     case invalidRequest
 }
