@@ -176,6 +176,16 @@ swift test
 - Swift OpenAPI URLSession
 - Swift HTTP Types
 
+## Continuous Integration
+
+This project uses GitHub Actions for continuous integration:
+
+- **Swift Tests** - Runs on every push and pull request
+  - Tests on macOS (latest)
+  - Tests on Linux (Ubuntu)
+  - Generates test reports
+- **Code Review** - Claude AI reviews all pull requests
+
 ## License
 
 Apache 2.0
