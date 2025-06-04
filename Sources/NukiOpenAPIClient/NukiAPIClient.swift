@@ -3,11 +3,33 @@ import OpenAPIRuntime
 import OpenAPIURLSession
 import HTTPTypes
 
+/// A high-level Swift client for the Nuki Web API.
+/// 
+/// This client provides a convenient wrapper around the auto-generated OpenAPI client,
+/// with built-in authentication, logging, and error handling.
+///
+/// ## Topics
+///
+/// ### Essentials
+/// - ``init(apiToken:)``
+/// - ``setAPIToken(_:)``
+/// - ``rawClient``
+///
+/// ### Convenience Methods
+/// - ``listSmartlocks()``
+/// - ``getSmartlock(id:)``
+///
+/// ### Error Handling
+/// - ``NukiAPIError``
 public class NukiAPIClient {
     private let client: Client
     private let serverURL: URL
     private var apiToken: String?
     
+    /// Initializes a new Nuki API client.
+    /// 
+    /// - Parameter apiToken: Optional Bearer token for authentication. Can be set later using ``setAPIToken(_:)``.
+    /// - Throws: An error if the server URL cannot be constructed.
     public init(apiToken: String? = nil) throws {
         self.serverURL = try Servers.Server1.url()
         self.apiToken = apiToken
@@ -24,13 +46,25 @@ public class NukiAPIClient {
         )
     }
     
+    /// Updates the API token used for authentication.
+    /// 
+    /// - Parameter token: The new Bearer token.
+    /// - Note: This only affects the stored token reference. The middleware uses the token
+    ///   provided during initialization.
     public func setAPIToken(_ token: String) {
         self.apiToken = token
     }
     
     // MARK: - Raw Generated Client Access
     
-    /// Access the raw generated client for direct API calls
+    /// Provides access to the raw generated OpenAPI client.
+    /// 
+    /// Use this property to make direct API calls using the generated client methods.
+    /// 
+    /// ## Example
+    /// ```swift
+    /// let response = try await client.rawClient.SmartlocksResource_get_get(.init())
+    /// ```
     public var rawClient: Client {
         return client
     }
@@ -91,12 +125,19 @@ public class NukiAPIClient {
     }
 }
 
+/// Errors that can occur when using the Nuki API client.
 public enum NukiAPIError: Error {
+    /// The server returned an unexpected HTTP status code.
     case unexpectedResponse(statusCode: Int)
+    /// Authentication is required but no valid token was provided.
     case authenticationRequired
+    /// The requested resource was not found.
     case notFound
+    /// Access to the resource is forbidden.
     case forbidden
+    /// The request was malformed or invalid.
     case badRequest
+    /// The request parameters were invalid.
     case invalidRequest
 }
 

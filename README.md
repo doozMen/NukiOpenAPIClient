@@ -152,17 +152,64 @@ The API client code is automatically generated from the OpenAPI specification du
 To update the Nuki API specification:
 
 1. Download the latest spec from https://api.nuki.io/static/swagger/swagger.json
-2. Convert it from Swagger 2.0 to OpenAPI 3.0 format (required by Swift OpenAPI Generator)
+2. Convert it from Swagger 2.0 to OpenAPI 3.0 format using the `swagger2openapi` tool:
+   ```bash
+   npm install -g swagger2openapi
+   swagger2openapi swagger.json -o openapi.json
+   ```
 3. Replace `Sources/NukiOpenAPIClient/openapi.json` with the converted spec
 4. Run `swift build` to regenerate the client
 
 The generated code will automatically be updated with any changes from the new specification.
 
+For detailed conversion instructions, see [Swagger to OpenAPI Conversion Guide](docs/swagger-to-openapi-conversion.md).
+
+## Documentation
+
+This package uses [Swift-DocC](https://www.swift.org/documentation/docc/) for documentation generation.
+
+### Generate Documentation Locally
+
+To generate and preview the documentation locally:
+
+```bash
+# Generate documentation
+swift package plugin generate-documentation --target NukiOpenAPIClient
+
+# Generate and open in browser
+swift package --disable-sandbox preview-documentation --target NukiOpenAPIClient
+```
+
+### Build Static Documentation
+
+To build static documentation for hosting:
+
+```bash
+swift package --allow-writing-to-directory ./docs \
+    generate-documentation --target NukiOpenAPIClient \
+    --output-path ./docs \
+    --transform-for-static-hosting \
+    --hosting-base-path NukiOpenAPIClient
+```
+
 ## Configuration
 
-- `openapi.json` - The official Nuki OpenAPI specification (converted from Swagger 2.0 to OpenAPI 3.0)
-- `openapi-generator-config.yaml` - Generator configuration
-- `NukiAPIClient.swift` - High-level wrapper around the generated client
+### Files
+
+- **`openapi.json`** - The Nuki API specification in OpenAPI 3.0 format
+  - Originally provided as Swagger 2.0 at https://api.nuki.io/static/swagger/swagger.json
+  - Converted using `swagger2openapi` tool (see [conversion guide](docs/swagger-to-openapi-conversion.md))
+  - Contains all API endpoints, request/response schemas, and authentication requirements
+  
+- **`openapi-generator-config.yaml`** - Swift OpenAPI Generator configuration
+  - Sets generated code access level to `public`
+  - Configures which files to generate (types and client)
+  
+- **`NukiAPIClient.swift`** - High-level wrapper around the generated client
+  - Provides convenient methods for common operations
+  - Handles authentication via Bearer token
+  - Includes request/response logging middleware
+  - Converts generic HTTPBody responses to typed Swift objects
 
 ## API Coverage
 
