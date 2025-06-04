@@ -45,77 +45,74 @@ let client = try NukiAPIClient()
 client.setAPIToken("your-api-token")
 ```
 
-### Listing Smart Locks
+### Using the Generated API Client
+
+The client provides access to all Nuki API endpoints through the generated `rawClient` property:
 
 ```swift
-do {
-    let smartlocks = try await client.listSmartlocks()
+// List smart locks
+let response = try await client.rawClient.SmartlocksResource_get_get(.init())
+switch response {
+case .ok(let okResponse):
+    // Parse the response body using OpenAPIRuntime
+    let decoder = JSONDecoder()
+    let smartlocks = try decoder.decode(
+        [Components.Schemas.Smartlock].self,
+        from: okResponse.body.any
+    )
     for smartlock in smartlocks {
         print("Smart Lock: \(smartlock.name) (ID: \(smartlock.smartlockId))")
     }
-} catch NukiAPIError.authenticationRequired {
+case .unauthorized:
     print("Invalid or missing API token")
-} catch {
-    print("Error: \(error)")
+case .undocumented(let statusCode, _):
+    print("Unexpected status code: \(statusCode)")
 }
 ```
 
-### Getting a Specific Smart Lock
+### Available Operations
+
+All API operations are available through the `rawClient` property. Examples:
 
 ```swift
-do {
-    let smartlock = try await client.getSmartlock(smartlockId: 12345)
-    print("Smart Lock: \(smartlock.name)")
-    print("Battery Critical: \(smartlock.state?.batteryCritical ?? false)")
-} catch NukiAPIError.notFound {
-    print("Smart lock not found")
-} catch {
-    print("Error: \(error)")
-}
+// Get account information
+client.rawClient.AccountsResource_get_get(.init())
+
+// Get a specific smartlock
+client.rawClient.SmartlockResource_get_get(.init(
+    path: .init(smartlockId: 12345)
+))
+
+// Perform a lock action
+client.rawClient.SmartlockActionResource_post_post(.init(
+    path: .init(smartlockId: "12345"),
+    body: .json(.init(action: 1))
+))
+
+// Get smartlock logs
+client.rawClient.SmartlockLogsResource_get_get(.init(
+    path: .init(smartlockId: 12345),
+    query: .init(limit: 50)
+))
 ```
 
-### Performing Lock Actions
+### Response Handling
+
+All responses use the generated OpenAPI types. Response bodies are returned as `HTTPBody` and need to be decoded:
 
 ```swift
-do {
-    // Lock the door
-    try await client.lockAction(
-        smartlockId: 12345,
-        action: 1 // 1 = lock, 2 = unlock, 3 = unlatch
-    )
-    print("Lock action completed")
-} catch NukiAPIError.badRequest {
-    print("Invalid action")
-} catch {
-    print("Error: \(error)")
-}
-```
-
-### Getting Smart Lock Logs
-
-```swift
-do {
-    let logs = try await client.getSmartlockLogs(
-        smartlockId: 12345,
-        limit: 50
-    )
-    for log in logs {
-        print("Action: \(log.action) at \(log.date)")
-    }
-} catch {
-    print("Error: \(error)")
-}
-```
-
-### Account Management
-
-```swift
-do {
-    let account = try await client.getAccount()
-    print("Account ID: \(account.accountId)")
-    print("Email: \(account.email)")
-} catch {
-    print("Error: \(error)")
+switch response {
+case .ok(let okResponse):
+    // Decode the response body
+    let decoder = JSONDecoder()
+    let data = try await Data(collecting: okResponse.body.any, upTo: 1024 * 1024)
+    let result = try decoder.decode(YourExpectedType.self, from: data)
+case .unauthorized:
+    // Handle authentication error
+case .notFound:
+    // Handle not found
+case .undocumented(let statusCode, _):
+    // Handle unexpected status codes
 }
 ```
 

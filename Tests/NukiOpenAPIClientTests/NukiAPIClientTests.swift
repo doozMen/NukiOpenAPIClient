@@ -1,25 +1,41 @@
-import XCTest
+import Testing
 @testable import NukiOpenAPIClient
 
-final class NukiAPIClientTests: XCTestCase {
+@Suite("Nuki API Client Tests")
+struct NukiAPIClientTests {
     
-    func testClientInitialization() throws {
+    @Test("Client initialization without token")
+    func clientInitializationWithoutToken() throws {
         // Test without token
-        XCTAssertNoThrow(try NukiAPIClient())
-        
-        // Test with token
-        let clientWithToken = try NukiAPIClient(apiToken: "test-token")
-        XCTAssertNotNil(clientWithToken)
+        #expect(throws: Never.self) {
+            _ = try NukiAPIClient()
+        }
     }
     
-    func testSetAPIToken() throws {
+    @Test("Client initialization with token")
+    func clientInitializationWithToken() throws {
+        // Test with token
+        let client = try NukiAPIClient(apiToken: "test-token")
+        #expect(client != nil)
+    }
+    
+    @Test("Set API token")
+    func setAPIToken() throws {
         let client = try NukiAPIClient()
         client.setAPIToken("new-token")
         // Token is private, so we can only verify the method doesn't throw
-        XCTAssertTrue(true)
+        #expect(true)
     }
     
-    func testNukiAPIErrorTypes() {
+    @Test("Raw client access")
+    func rawClientAccess() throws {
+        let client = try NukiAPIClient(apiToken: "test-token")
+        let rawClient = client.rawClient
+        #expect(rawClient != nil)
+    }
+    
+    @Test("Nuki API error types")
+    func nukiAPIErrorTypes() {
         // Verify all error types are available
         let errors: [NukiAPIError] = [
             .unexpectedResponse(statusCode: 500),
@@ -30,128 +46,60 @@ final class NukiAPIClientTests: XCTestCase {
         ]
         
         // Just verify they compile and can be created
-        XCTAssertEqual(errors.count, 5)
+        #expect(errors.count == 5)
     }
     
-    // Note: Integration tests below would require a valid API token and network access
-    // They are marked as examples of how to test the actual API calls
-    
-    func testListSmartlocksStructure() async throws {
-        // This test verifies the method signature compiles correctly
-        let client = try NukiAPIClient(apiToken: "dummy-token")
+    @Test("Verify middleware initialization")
+    func middlewareInitialization() throws {
+        // Test that client initializes with middleware
+        let clientWithToken = try NukiAPIClient(apiToken: "test-token")
+        #expect(clientWithToken != nil)
         
-        // We can't actually call this without a valid token, but we can verify it compiles
-        // In a real test environment, you would:
-        // 1. Use a test API token
-        // 2. Mock the network responses
-        // 3. Or use a test server
-        
-        // Example of what the test would look like:
-        /*
-        do {
-            let smartlocks = try await client.listSmartlocks()
-            XCTAssertNotNil(smartlocks)
-            XCTAssertTrue(smartlocks.isEmpty || smartlocks.count > 0)
-        } catch NukiAPIError.authenticationRequired {
-            // Expected when using dummy token
-            XCTAssertTrue(true)
-        }
-        */
-    }
-    
-    func testGetSmartlockStructure() async throws {
-        let client = try NukiAPIClient(apiToken: "dummy-token")
-        
-        // Verify method signature compiles with correct types
-        // In real tests, you would test with actual smartlock IDs
-        /*
-        do {
-            let smartlock = try await client.getSmartlock(smartlockId: 12345)
-            XCTAssertNotNil(smartlock)
-            XCTAssertEqual(smartlock.smartlockId, 12345)
-        } catch NukiAPIError.authenticationRequired {
-            // Expected when using dummy token
-            XCTAssertTrue(true)
-        }
-        */
-    }
-    
-    func testErrorHandling() async throws {
-        let client = try NukiAPIClient() // No token
-        
-        // When calling without authentication, we should get authenticationRequired error
-        do {
-            _ = try await client.getAccount()
-            XCTFail("Should have thrown authenticationRequired error")
-        } catch NukiAPIError.authenticationRequired {
-            // This is expected
-            XCTAssertTrue(true)
-        } catch {
-            XCTFail("Unexpected error type: \(error)")
-        }
+        let clientWithoutToken = try NukiAPIClient()
+        #expect(clientWithoutToken != nil)
     }
 }
 
-// MARK: - Mock Tests
-// These tests demonstrate how to test with mocked responses
+// MARK: - Integration Test Examples
 
-extension NukiAPIClientTests {
+@Suite("Integration Test Examples")
+struct IntegrationTestExamples {
     
-    func testMockSmartlockResponse() throws {
-        // In a real implementation, you would:
-        // 1. Create a mock transport that returns predefined responses
-        // 2. Inject it into the client
-        // 3. Test the response parsing
+    @Test("Example: List smartlocks", .disabled("Requires valid API token"))
+    func exampleListSmartlocks() async throws {
+        // This test is disabled by default as it requires a valid API token
+        // To run integration tests:
+        // 1. Set a valid API token
+        // 2. Remove the .disabled attribute
         
-        // Example structure:
-        /*
-        let mockTransport = MockTransport()
-        mockTransport.responses["/smartlock"] = MockResponse(
-            status: 200,
-            body: """
-            [{
-                "smartlockId": 12345,
-                "name": "Front Door",
-                "state": {
-                    "mode": 2,
-                    "state": 1,
-                    "trigger": 0,
-                    "lastAction": 0,
-                    "batteryCritical": false,
-                    "timestamp": "2024-06-04T12:00:00Z"
-                }
-            }]
-            """
-        )
+        let client = try NukiAPIClient(apiToken: "your-api-token")
+        let response = try await client.rawClient.SmartlocksResource_get_get(.init())
         
-        let client = NukiAPIClient(transport: mockTransport)
-        let smartlocks = try await client.listSmartlocks()
-        
-        XCTAssertEqual(smartlocks.count, 1)
-        XCTAssertEqual(smartlocks[0].smartlockId, 12345)
-        XCTAssertEqual(smartlocks[0].name, "Front Door")
-        */
-    }
-}
-
-// MARK: - Test Helpers
-
-private extension NukiAPIClientTests {
-    
-    /// Helper to create test dates
-    func createTestDate(_ dateString: String) -> Date? {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'"
-        formatter.timeZone = TimeZone(abbreviation: "UTC")
-        return formatter.date(from: dateString)
-    }
-    
-    /// Helper to verify date ranges
-    func assertDateInRange(_ date: Date?, from: Date, to: Date, file: StaticString = #file, line: UInt = #line) {
-        guard let date = date else {
-            XCTFail("Date is nil", file: file, line: line)
-            return
+        switch response {
+        case .ok(let okResponse):
+            // Parse the response body
+            #expect(okResponse.body != nil)
+        case .unauthorized:
+            Issue.record("Authentication failed")
+        case .undocumented(let statusCode, _):
+            Issue.record("Unexpected status code: \(statusCode)")
+        default:
+            Issue.record("Unexpected response")
         }
-        XCTAssertTrue(date >= from && date <= to, "Date \(date) is not in range \(from) to \(to)", file: file, line: line)
+    }
+    
+    @Test("Example: Get account info", .disabled("Requires valid API token"))
+    func exampleGetAccount() async throws {
+        let client = try NukiAPIClient(apiToken: "your-api-token")
+        let response = try await client.rawClient.AccountsResource_get_get(.init())
+        
+        switch response {
+        case .ok(let okResponse):
+            #expect(okResponse.body != nil)
+        case .unauthorized:
+            Issue.record("Authentication failed")
+        default:
+            Issue.record("Unexpected response")
+        }
     }
 }

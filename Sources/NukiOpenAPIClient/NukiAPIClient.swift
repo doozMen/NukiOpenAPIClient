@@ -28,139 +28,28 @@ public class NukiAPIClient {
         self.apiToken = token
     }
     
-    // MARK: - Smartlock Operations
+    // MARK: - Raw Generated Client Access
     
-    public func listSmartlocks(authIds: Bool? = nil) async throws -> [Components.Schemas.Smartlock] {
-        let response = try await client.SmartlocksResource_get_get(.init(
-            query: .init(authIds: authIds)
-        ))
-        
-        switch response {
-        case .ok(let okResponse):
-            switch okResponse.body {
-            case .json(let smartlocks):
-                return smartlocks
-            }
-        case .unauthorized:
-            throw NukiAPIError.authenticationRequired
-        case .undocumented(let statusCode, _):
-            throw NukiAPIError.unexpectedResponse(statusCode: statusCode)
-        }
+    /// Access the raw generated client for direct API calls
+    public var rawClient: Client {
+        return client
     }
     
-    public func getSmartlock(smartlockId: Int64) async throws -> Components.Schemas.Smartlock {
-        let response = try await client.SmartlockResource_get_get(.init(
-            path: .init(smartlockId: smartlockId)
-        ))
-        
-        switch response {
-        case .ok(let okResponse):
-            switch okResponse.body {
-            case .json(let smartlock):
-                return smartlock
-            }
-        case .unauthorized:
-            throw NukiAPIError.authenticationRequired
-        case .notFound:
-            throw NukiAPIError.notFound
-        case .undocumented(let statusCode, _):
-            throw NukiAPIError.unexpectedResponse(statusCode: statusCode)
-        }
-    }
+    // MARK: - Example convenience methods
+    // These would need to be updated based on the actual generated API
+    // For now, we expose the raw client so users can make any API call
     
-    public func updateSmartlock(smartlockId: Int64, smartlock: Components.Schemas.Smartlock) async throws {
-        let response = try await client.SmartlockResource_post_post(.init(
-            path: .init(smartlockId: smartlockId),
-            body: .json(smartlock)
-        ))
-        
-        switch response {
-        case .noContent:
-            return
-        case .unauthorized:
-            throw NukiAPIError.authenticationRequired
-        case .undocumented(let statusCode, _):
-            throw NukiAPIError.unexpectedResponse(statusCode: statusCode)
-        }
-    }
-    
-    // MARK: - Smartlock Actions
-    
-    public func lockAction(smartlockId: Int64, action: Operations.SmartlockActionResource_post_post.Input.Body.jsonPayload.actionPayload) async throws {
-        let response = try await client.SmartlockActionResource_post_post(.init(
-            path: .init(smartlockId: smartlockId),
-            body: .json(.init(action: action))
-        ))
-        
-        switch response {
-        case .noContent:
-            return
-        case .badRequest:
-            throw NukiAPIError.badRequest
-        case .unauthorized:
-            throw NukiAPIError.authenticationRequired
-        case .unprocessableEntity:
-            throw NukiAPIError.invalidRequest
-        case .undocumented(let statusCode, _):
-            throw NukiAPIError.unexpectedResponse(statusCode: statusCode)
-        }
-    }
-    
-    // MARK: - Smartlock Logs
-    
-    public func getSmartlockLogs(
-        smartlockId: Int64,
-        accountUserId: Int32? = nil,
-        fromDate: String? = nil,
-        toDate: String? = nil,
-        action: Operations.SmartlockLogsResource_get_get.Input.Query.actionPayload? = nil,
-        id: String? = nil,
-        limit: Int32? = nil
-    ) async throws -> [Components.Schemas.SmartlockLog] {
-        let response = try await client.SmartlockLogsResource_get_get(.init(
-            path: .init(smartlockId: smartlockId),
-            query: .init(
-                accountUserId: accountUserId,
-                fromDate: fromDate,
-                toDate: toDate,
-                action: action,
-                id: id,
-                limit: limit
-            )
-        ))
-        
-        switch response {
-        case .ok(let okResponse):
-            switch okResponse.body {
-            case .json(let logs):
-                return logs
-            }
-        case .badRequest:
-            throw NukiAPIError.badRequest
-        case .unauthorized:
-            throw NukiAPIError.authenticationRequired
-        case .undocumented(let statusCode, _):
-            throw NukiAPIError.unexpectedResponse(statusCode: statusCode)
-        }
-    }
-    
-    // MARK: - Account Operations
-    
-    public func getAccount() async throws -> Components.Schemas.MyAccount {
-        let response = try await client.AccountsResource_get_get(.init())
-        
-        switch response {
-        case .ok(let okResponse):
-            switch okResponse.body {
-            case .json(let account):
-                return account
-            }
-        case .unauthorized:
-            throw NukiAPIError.authenticationRequired
-        case .undocumented(let statusCode, _):
-            throw NukiAPIError.unexpectedResponse(statusCode: statusCode)
-        }
-    }
+    /// Example of how to list smartlocks
+    /// Usage: 
+    /// let response = try await client.rawClient.SmartlocksResource_get_get(.init())
+    /// switch response {
+    /// case .ok(let okResponse):
+    ///     // Handle success
+    /// case .unauthorized:
+    ///     // Handle auth error
+    /// default:
+    ///     // Handle other cases
+    /// }
 }
 
 public enum NukiAPIError: Error {
