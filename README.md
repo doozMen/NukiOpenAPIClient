@@ -9,6 +9,8 @@ A Swift package for integrating with the Nuki Web API using OpenAPI code generat
 
 This package provides a type-safe Swift client for the Nuki Web API, generated from their official OpenAPI specification. It's designed to be used by the opens.rent backend for managing smart lock access.
 
+The client code is automatically generated during the build process using [Swift OpenAPI Generator](https://github.com/apple/swift-openapi-generator) from the Nuki API specification.
+
 ## Features
 
 - Type-safe API client generated from Nuki's OpenAPI specification
@@ -133,9 +135,32 @@ public enum NukiAPIError: Error {
 }
 ```
 
+## Code Generation
+
+The API client code is automatically generated from the OpenAPI specification during the build process. No manual code generation is required.
+
+### How it works
+
+1. The OpenAPI specification is located at `Sources/NukiOpenAPIClient/openapi.json`
+2. During `swift build`, the Swift OpenAPI Generator plugin automatically generates:
+   - `Client.swift` - The API client implementation
+   - `Types.swift` - All data models from the OpenAPI spec
+   - `Server.swift` - Server stubs (not used in this client package)
+
+### Updating the API specification
+
+To update the Nuki API specification:
+
+1. Download the latest spec from https://api.nuki.io/static/swagger/swagger.json
+2. Convert it from Swagger 2.0 to OpenAPI 3.0 format (required by Swift OpenAPI Generator)
+3. Replace `Sources/NukiOpenAPIClient/openapi.json` with the converted spec
+4. Run `swift build` to regenerate the client
+
+The generated code will automatically be updated with any changes from the new specification.
+
 ## Configuration
 
-- `openapi.yaml` - The official Nuki OpenAPI specification
+- `openapi.json` - The official Nuki OpenAPI specification (converted from Swagger 2.0 to OpenAPI 3.0)
 - `openapi-generator-config.yaml` - Generator configuration
 - `NukiAPIClient.swift` - High-level wrapper around the generated client
 
