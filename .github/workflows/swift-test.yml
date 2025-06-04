@@ -1,0 +1,59 @@
+name: Swift Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Swift
+      uses: swift-actions/setup-swift@v2
+      with:
+        swift-version: "6.0"
+    
+    - name: Show Swift version
+      run: swift --version
+    
+    - name: Build
+      run: swift build -v
+    
+    - name: Run tests
+      run: swift test -v
+    
+    - name: Generate test report
+      if: success() || failure()
+      run: |
+        swift test --parallel --xunit-output tests.xml || true
+        
+    - name: Upload test results
+      if: success() || failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results
+        path: tests.xml
+        retention-days: 30
+        
+  test-linux:
+    name: Test on Linux
+    runs-on: ubuntu-latest
+    container:
+      image: swift:6.0
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Build
+      run: swift build -v
+      
+    - name: Run tests
+      run: swift test -v
