@@ -9,8 +9,6 @@ A Swift package for integrating with the Nuki Web API using OpenAPI code generat
 
 This package provides a type-safe Swift client for the Nuki Web API, generated from their official OpenAPI specification. It's designed to be used by the opens.rent backend for managing smart lock access.
 
-The client code is automatically generated during the build process using [Swift OpenAPI Generator](https://github.com/apple/swift-openapi-generator) from the Nuki API specification.
-
 ## Features
 
 - Type-safe API client generated from Nuki's OpenAPI specification
